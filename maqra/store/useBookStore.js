@@ -88,9 +88,11 @@ export const useBookStore = create(
       selectedBookId: '1',
       profilePicture: null,
       readingSessions: [],
+      language: 'fr',
 
       setSelectedBookId: (id) => set({ selectedBookId: id }),
       setProfilePicture: (uri) => set({ profilePicture: uri }),
+      setLanguage: (lang) => set({ language: lang }),
       updateBookCover: (id, uri) => set((state) => ({
         books: state.books.map(b => b.id === id ? { ...b, coverPhoto: uri } : b),
       })),
@@ -101,9 +103,35 @@ export const useBookStore = create(
           ...session,
         };
         const minutes = Math.ceil(session.durationSeconds / 60);
+        
+        // Calculate dynamic streak based on reading history
+        const updatedSessions = [...state.readingSessions, newSession];
+        const uniqueDates = new Set(updatedSessions.map(s => s.timestamp.substring(0, 10)));
+        const todayStr = new Date().toISOString().substring(0, 10);
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().substring(0, 10);
+        
+        let newStreak = state.streak;
+        if (uniqueDates.has(todayStr) || uniqueDates.has(yesterdayStr)) {
+          let currentStreak = 0;
+          let checkDate = uniqueDates.has(todayStr) ? new Date() : yesterday;
+          while (true) {
+            const checkDateStr = checkDate.toISOString().substring(0, 10);
+            if (uniqueDates.has(checkDateStr)) {
+              currentStreak++;
+              checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+              break;
+            }
+          }
+          newStreak = Math.max(state.streak, currentStreak);
+        }
+
         return {
-          readingSessions: [...state.readingSessions, newSession],
+          readingSessions: updatedSessions,
           totalReadingTime: state.totalReadingTime + minutes,
+          streak: newStreak,
         };
       }),
 

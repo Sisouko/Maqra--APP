@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Modal, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useBookStore } from '../../store/useBookStore';
+import { TRANSLATIONS } from '../../lib/localization';
 import { COLORS, TYPOGRAPHY, SPACING, SHAPES, ZELLIGE_STYLES } from '../../lib/theme';
 
 export default function BibliothequeScreen() {
   const router = useRouter();
   
   // Zustand State & Actions
-  const { books, annualGoal, setSelectedBookId, addBook, profilePicture } = useBookStore();
+  const { books, annualGoal, setSelectedBookId, addBook, profilePicture, language } = useBookStore();
+  
+  // Localization setup
+  const t = TRANSLATIONS[language] || TRANSLATIONS.fr;
+  const isRtl = language === 'ar';
   
   // Local UI State
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,7 +25,7 @@ export default function BibliothequeScreen() {
   const [newPages, setNewPages] = useState('200');
   const [newLanguage, setNewLanguage] = useState('AR');
   const [newRating, setNewRating] = useState(4.0);
-  const [newStatus, setNewStatus] = useState('à lire'); // 'à lire' | 'en cours' | 'terminé'
+  const [newStatus, setNewStatus] = useState('à lire');
 
   // Computed Values
   const completedBooks = books.filter(b => b.status === 'terminé');
@@ -28,12 +33,11 @@ export default function BibliothequeScreen() {
   
   const totalPagesRead = books.reduce((acc, book) => acc + (Number(book.currentPage) || 0), 0);
   
-  // Count books read/completed this month (e.g. March 2024 in mocks or current month)
   const currentMonthCount = completedBooks.filter(book => {
     if (!book.completedAt) return false;
     const date = new Date(book.completedAt);
     return date.getMonth() === 2 && date.getFullYear() === 2024; // March 2024
-  }).length || completedCount; // Fallback to completedCount if none match
+  }).length || completedCount;
 
   // Filter books list
   const filteredBooks = books.filter(book => 
@@ -58,7 +62,6 @@ export default function BibliothequeScreen() {
       status: newStatus,
     });
 
-    // Reset fields
     setNewTitle('');
     setNewAuthor('');
     setNewPages('200');
@@ -69,19 +72,23 @@ export default function BibliothequeScreen() {
     setIsAddModalVisible(false);
   };
 
-  // Progress Ring Math
   const goalPercentage = Math.min(100, Math.round((completedCount / annualGoal) * 100));
+
+  // RTL Helpers
+  const rowStyle = { flexDirection: isRtl ? 'row-reverse' : 'row' };
+  const textAlignStyle = { textAlign: isRtl ? 'right' : 'left' };
+  const alignSelfStyle = { alignSelf: isRtl ? 'flex-end' : 'flex-start' };
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
         {/* HEADER */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
+        <View style={[styles.header, rowStyle]}>
+          <View style={[styles.headerLeft, rowStyle]}>
             <Text style={styles.zelligeIcon}>💠</Text>
-            <Text style={styles.headerTitle}>مقرا · Maqra</Text>
+            <Text style={styles.headerTitle}>{t.appTitle}</Text>
           </View>
-          <View style={styles.headerRight}>
+          <View style={[styles.headerRight, rowStyle]}>
             <TouchableOpacity style={styles.iconButton}>
               <Text style={styles.iconText}>🔔</Text>
             </TouchableOpacity>
@@ -95,47 +102,47 @@ export default function BibliothequeScreen() {
           </View>
         </View>
         
-        <Text style={styles.subtitle}>Bonjour, Ahmed 👋</Text>
+        <Text style={[styles.subtitle, textAlignStyle]}>{t.greeting}</Text>
 
         {/* ANNUAL GOAL RING (hero card) */}
         <View style={[styles.heroCard, ZELLIGE_STYLES.borderMotif]}>
-          <Text style={styles.goalLabel}>Objectif annuel 2024</Text>
+          <Text style={styles.goalLabel}>{t.annualGoal} 2024</Text>
           <View style={styles.ringContainer}>
             <View style={styles.progressRing}>
               <View style={styles.ringInner}>
                 <Text style={styles.ringValue}>{completedCount} / {annualGoal}</Text>
-                <Text style={styles.ringSubvalue}>{goalPercentage}% complété</Text>
+                <Text style={styles.ringSubvalue}>{goalPercentage}% {t.completed}</Text>
               </View>
             </View>
           </View>
         </View>
 
         {/* QUICK STATS ROW */}
-        <View style={styles.statsRow}>
+        <View style={[styles.statsRow, rowStyle]}>
           <View style={[styles.statCard, ZELLIGE_STYLES.leftAccent]}>
             <Text style={styles.statEmoji}>📚</Text>
             <Text style={styles.statVal}>{books.length}</Text>
-            <Text style={styles.statLbl}>Livres</Text>
+            <Text style={styles.statLbl}>{t.livres}</Text>
           </View>
           <View style={[styles.statCard, ZELLIGE_STYLES.leftAccentMint]}>
             <Text style={styles.statEmoji}>📖</Text>
             <Text style={styles.statVal}>{totalPagesRead.toLocaleString()}</Text>
-            <Text style={styles.statLbl}>Pages lues</Text>
+            <Text style={styles.statLbl}>{t.pagesLues}</Text>
           </View>
           <View style={[styles.statCard, ZELLIGE_STYLES.leftAccentTerracotta]}>
             <Text style={styles.statEmoji}>📅</Text>
             <Text style={styles.statVal}>{currentMonthCount}</Text>
-            <Text style={styles.statLbl}>Ce mois</Text>
+            <Text style={styles.statLbl}>{t.ceMois}</Text>
           </View>
         </View>
 
         {/* SEARCH & ADD ROW */}
-        <View style={styles.searchRow}>
-          <View style={styles.searchBar}>
+        <View style={[styles.searchRow, rowStyle]}>
+          <View style={[styles.searchBar, rowStyle]}>
             <Text style={styles.searchIcon}>🔍</Text>
             <TextInput
-              style={styles.searchInput}
-              placeholder="Rechercher un livre..."
+              style={[styles.searchInput, textAlignStyle]}
+              placeholder={t.searchPlaceholder}
               placeholderTextColor={COLORS.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -147,20 +154,23 @@ export default function BibliothequeScreen() {
         </View>
         
         {/* BOOKS LIST */}
-        <Text style={styles.sectionTitle}>Ma Bibliothèque</Text>
+        <Text style={[styles.sectionTitle, textAlignStyle]}>{t.myLibrary}</Text>
         
         {filteredBooks.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Aucun livre trouvé</Text>
+            <Text style={styles.emptyText}>{t.noBooks}</Text>
           </View>
         ) : (
           filteredBooks.map((book) => {
             const progress = book.pages > 0 ? Math.round((book.currentPage / book.pages) * 100) : 0;
             
-            // Get left border motif based on status
-            let accentStyle = ZELLIGE_STYLES.leftAccent; // default Blue
+            let accentStyle = ZELLIGE_STYLES.leftAccent;
             if (book.status === 'terminé') accentStyle = ZELLIGE_STYLES.leftAccentMint;
             if (book.status === 'à lire') accentStyle = { borderLeftWidth: 4, borderLeftColor: COLORS.border };
+
+            // For Arabic (RTL), we mirror the card content, but keep left accent or switch it
+            const cardRowStyle = { flexDirection: isRtl ? 'row-reverse' : 'row' };
+            const cardTextContainerStyle = { alignItems: isRtl ? 'flex-end' : 'flex-start' };
 
             return (
               <TouchableOpacity 
@@ -168,10 +178,10 @@ export default function BibliothequeScreen() {
                 style={[styles.bookCard, accentStyle]} 
                 onPress={() => handleSelectBook(book.id)}
               >
-                <View style={styles.bookInfo}>
-                  <View style={styles.bookTextContent}>
-                    <Text style={styles.bookTitleText}>{book.title}</Text>
-                    <Text style={styles.bookAuthorText}>{book.author}</Text>
+                <View style={[styles.bookInfo, cardRowStyle]}>
+                  <View style={[styles.bookTextContent, cardTextContainerStyle]}>
+                    <Text style={[styles.bookTitleText, textAlignStyle]}>{book.title}</Text>
+                    <Text style={[styles.bookAuthorText, textAlignStyle]}>{book.author}</Text>
                   </View>
                   <View style={styles.languageBadge}>
                     <Text style={styles.languageBadgeText}>{book.language}</Text>
@@ -186,7 +196,9 @@ export default function BibliothequeScreen() {
                       backgroundColor: book.status === 'terminé' ? COLORS.tertiary : COLORS.primary 
                     }]} />
                   </View>
-                  <Text style={styles.progressText}>{book.currentPage} / {book.pages} p. ({progress}%)</Text>
+                  <Text style={[styles.progressText, { textAlign: isRtl ? 'left' : 'right' }]}>
+                    {book.currentPage} / {book.pages} p. ({progress}%)
+                  </Text>
                 </View>
               </TouchableOpacity>
             );
@@ -203,27 +215,27 @@ export default function BibliothequeScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Ajouter un livre 📚</Text>
+            <Text style={[styles.modalTitle, textAlignStyle]}>{t.addBookBtn}</Text>
             
             <TextInput
-              style={styles.modalInput}
-              placeholder="Titre"
+              style={[styles.modalInput, textAlignStyle]}
+              placeholder={t.title}
               placeholderTextColor={COLORS.textSecondary}
               value={newTitle}
               onChangeText={setNewTitle}
             />
 
             <TextInput
-              style={styles.modalInput}
-              placeholder="Auteur"
+              style={[styles.modalInput, textAlignStyle]}
+              placeholder={t.author}
               placeholderTextColor={COLORS.textSecondary}
               value={newAuthor}
               onChangeText={setNewAuthor}
             />
 
             <TextInput
-              style={styles.modalInput}
-              placeholder="Nombre total de pages"
+              style={[styles.modalInput, textAlignStyle]}
+              placeholder={t.totalPages}
               placeholderTextColor={COLORS.textSecondary}
               value={newPages}
               onChangeText={setNewPages}
@@ -231,8 +243,8 @@ export default function BibliothequeScreen() {
             />
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Langue:</Text>
-              <View style={styles.optionRow}>
+              <Text style={[styles.formLabel, textAlignStyle]}>{t.language}:</Text>
+              <View style={[styles.optionRow, rowStyle]}>
                 {['AR', 'FR', 'EN'].map((lang) => (
                   <TouchableOpacity 
                     key={lang} 
@@ -246,8 +258,8 @@ export default function BibliothequeScreen() {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Statut:</Text>
-              <View style={styles.optionRow}>
+              <Text style={[styles.formLabel, textAlignStyle]}>{t.status}:</Text>
+              <View style={[styles.optionRow, rowStyle]}>
                 {['à lire', 'en cours', 'terminé'].map((status) => (
                   <TouchableOpacity 
                     key={status} 
@@ -260,12 +272,12 @@ export default function BibliothequeScreen() {
               </View>
             </View>
 
-            <View style={styles.modalActions}>
+            <View style={[styles.modalActions, rowStyle]}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsAddModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Annuler</Text>
+                <Text style={styles.cancelBtnText}>{t.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.submitBtn} onPress={handleAddBookSubmit}>
-                <Text style={styles.submitBtnText}>Ajouter</Text>
+                <Text style={styles.submitBtnText}>{t.add}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -286,13 +298,10 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
   headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
@@ -303,7 +312,6 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.titleLarge,
   },
   headerRight: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
@@ -380,7 +388,6 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   statsRow: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     gap: SPACING.sm,
     marginBottom: SPACING.xl,
@@ -405,13 +412,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   searchRow: {
-    flexDirection: 'row',
     gap: SPACING.sm,
     marginBottom: SPACING.xl,
   },
   searchBar: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surface,
     borderRadius: SHAPES.buttonRadius,
@@ -459,7 +464,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   bookInfo: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: SPACING.md,
@@ -504,7 +508,6 @@ const styles = StyleSheet.create({
   progressText: {
     color: COLORS.textSecondary,
     fontSize: 11,
-    textAlign: 'right',
   },
   modalOverlay: {
     flex: 1,
@@ -542,7 +545,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   optionRow: {
-    flexDirection: 'row',
     gap: 8,
   },
   optionButton: {
@@ -568,7 +570,6 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   modalActions: {
-    flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 12,
     marginTop: SPACING.lg,

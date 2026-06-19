@@ -3,11 +3,16 @@ import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Modal,
 import * as ImagePicker from 'expo-image-picker';
 import { useBookStore } from '../../store/useBookStore';
 import { useReadingTimer } from '../../hooks/useReadingTimer';
+import { TRANSLATIONS } from '../../lib/localization';
 import { COLORS, TYPOGRAPHY, SPACING, SHAPES, ZELLIGE_STYLES } from '../../lib/theme';
 
 export default function DetailsScreen() {
-  const { books, selectedBookId, updateBookProgress, deleteBook, updateBookCover, addReadingSession } = useBookStore();
+  const { books, selectedBookId, updateBookProgress, deleteBook, updateBookCover, addReadingSession, language } = useBookStore();
   
+  // Localization setup
+  const t = TRANSLATIONS[language] || TRANSLATIONS.fr;
+  const isRtl = language === 'ar';
+
   // Get currently selected book, or default to the first one in the list
   const book = books.find(b => b.id === selectedBookId) || books[0];
   
@@ -31,7 +36,7 @@ export default function DetailsScreen() {
   if (!book) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Aucun livre disponible. Commencez par ajouter un livre dans l'onglet Bibliothèque !</Text>
+        <Text style={styles.emptyText}>{t.emptyDetails}</Text>
       </View>
     );
   }
@@ -73,7 +78,6 @@ export default function DetailsScreen() {
         updateBookCover(book.id, result.assets[0].uri);
       }
     } catch (e) {
-      // Fallback
       let result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
         aspect: [3, 4],
@@ -97,14 +101,12 @@ export default function DetailsScreen() {
   const handleSaveSession = () => {
     const addedPages = Number(pagesReadInput) || 0;
     
-    // Save reading session in store
     addReadingSession({
       bookId: book.id,
       durationSeconds: sessionDuration,
       pagesRead: addedPages,
     });
 
-    // Update book progress
     const newPage = Math.min(book.pages, book.currentPage + addedPages);
     updateBookProgress(book.id, newPage);
 
@@ -112,14 +114,12 @@ export default function DetailsScreen() {
     setPagesReadInput('10');
   };
 
-  // Format MM:SS
   const formatStopwatch = (totalSecs) => {
     const m = Math.floor(totalSecs / 60);
     const s = totalSecs % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Star builder helper
   const renderStars = (rating) => {
     const stars = [];
     const floorRating = Math.floor(rating);
@@ -133,13 +133,23 @@ export default function DetailsScreen() {
     return stars.join(' ') + ` (${rating})`;
   };
 
+  // RTL Overrides
+  const rowStyle = { flexDirection: isRtl ? 'row-reverse' : 'row' };
+  const textAlignStyle = { textAlign: isRtl ? 'right' : 'left' };
+  const backArrowIcon = isRtl ? '→' : '←';
+
+  // Format Completed message
+  const completedMessage = t.sessionCompletedMsg
+    .replace('{min}', Math.ceil(sessionDuration / 60))
+    .replace('{time}', formatStopwatch(sessionDuration));
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         {/* HEADER */}
-        <View style={styles.header}>
+        <View style={[styles.header, rowStyle]}>
           <TouchableOpacity style={styles.backButton}>
-            <Text style={styles.headerIcon}>←</Text>
+            <Text style={styles.headerIcon}>{backArrowIcon}</Text>
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>{book.title}</Text>
@@ -152,7 +162,7 @@ export default function DetailsScreen() {
 
         {/* BOOK HERO CARD */}
         <View style={styles.heroCard}>
-          {/* Glow halo & cover photo picker */}
+          {/* Cover Photo */}
           <TouchableOpacity style={styles.coverWrapper} onPress={handleChangeCover}>
             <View style={styles.glowHalo} />
             {book.coverPhoto ? (
@@ -171,7 +181,7 @@ export default function DetailsScreen() {
           <Text style={styles.bookTitle}>{book.title}</Text>
           <Text style={styles.bookAuthor}>{book.author}</Text>
 
-          <View style={styles.badgeRow}>
+          <View style={[styles.badgeRow, rowStyle]}>
             <View style={styles.pillBadge}>
               <Text style={styles.pillBadgeText}>{book.language}</Text>
             </View>
@@ -180,7 +190,7 @@ export default function DetailsScreen() {
 
           <Text style={styles.totalPages}>{book.pages} pages</Text>
 
-          <View style={styles.statusRow}>
+          <View style={[styles.statusRow, rowStyle]}>
             <View style={[styles.pillBadge, { 
               backgroundColor: book.status === 'terminé' ? COLORS.tertiary + '20' : book.status === 'en cours' ? COLORS.primary + '20' : COLORS.border,
               borderColor: book.status === 'terminé' ? COLORS.tertiary : book.status === 'en cours' ? COLORS.primary : COLORS.border
@@ -197,7 +207,7 @@ export default function DetailsScreen() {
               onPress={handleToggleCompleted}
             >
               <Text style={[styles.outlineButtonText, { color: book.status === 'terminé' ? COLORS.secondary : COLORS.tertiary }]}>
-                {book.status === 'terminé' ? 'Marquer non lu' : 'Marquer terminé'}
+                {book.status === 'terminé' ? t.markUnfinished : t.markFinished}
               </Text>
             </TouchableOpacity>
           </View>
@@ -205,7 +215,7 @@ export default function DetailsScreen() {
 
         {/* PROGRESS SECTION */}
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Progression de lecture</Text>
+          <Text style={[styles.sectionTitle, textAlignStyle]}>{t.currentProgress}</Text>
           
           <View style={styles.progressRingWrapper}>
             <View style={[styles.progressRing, { borderColor: book.status === 'terminé' ? COLORS.tertiary : COLORS.primary }]}>
@@ -217,53 +227,51 @@ export default function DetailsScreen() {
 
           <Text style={styles.progressStats}>{book.currentPage} / {book.pages} pages</Text>
 
-          <View style={styles.inputRow}>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Page actuelle:</Text>
+          <View style={[styles.inputRow, rowStyle]}>
+            <View style={[styles.inputWrapper, rowStyle]}>
+              <Text style={styles.inputLabel}>{t.currentPage}:</Text>
               <TextInput
-                style={styles.pageInput}
+                style={[styles.pageInput, textAlignStyle]}
                 value={currentPageInput}
                 onChangeText={setCurrentPageInput}
                 keyboardType="number-pad"
               />
             </View>
             <TouchableOpacity style={styles.updateButton} onPress={handleUpdatePage}>
-              <Text style={styles.updateButtonText}>Mettre à jour</Text>
+              <Text style={styles.updateButtonText}>{t.update}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* READING SESSION CHRONOMETER CARD */}
         <View style={[styles.sectionCard, ZELLIGE_STYLES.borderMotif]}>
-          <Text style={styles.sectionTitle}>Session de lecture</Text>
+          <Text style={[styles.sectionTitle, textAlignStyle]}>{t.readingSession}</Text>
           
           {seconds > 0 || isActive ? (
             <View style={styles.timerDisplayContainer}>
               <Text style={styles.timerDigits}>{formatStopwatch(seconds)}</Text>
               
-              <View style={styles.timerControlsRow}>
+              <View style={[styles.timerControlsRow, rowStyle]}>
                 {isActive ? (
                   <TouchableOpacity style={[styles.timerControlBtn, styles.timerPauseBtn]} onPress={pauseTimer}>
-                    <Text style={styles.timerControlText}>Pause</Text>
+                    <Text style={styles.timerControlText}>{t.pauseSession}</Text>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity style={[styles.timerControlBtn, styles.timerStartBtn]} onPress={startTimer}>
-                    <Text style={styles.timerControlText}>Reprendre</Text>
+                    <Text style={styles.timerControlText}>{t.resumeSession}</Text>
                   </TouchableOpacity>
                 )}
                 
                 <TouchableOpacity style={[styles.timerControlBtn, styles.timerStopBtn]} onPress={handleEndSession}>
-                  <Text style={styles.timerControlText}>Terminer</Text>
+                  <Text style={styles.timerControlText}>{t.endSession}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <View>
-              <Text style={styles.sessionDesc}>
-                Commencez une session de lecture chronométrée pour suivre votre vitesse et votre progression en temps réel.
-              </Text>
+              <Text style={[styles.sessionDesc, textAlignStyle]}>{t.sessionDesc}</Text>
               <TouchableOpacity style={styles.startSessionBtn} onPress={startTimer}>
-                <Text style={styles.startSessionText}>Démarrer la session</Text>
+                <Text style={styles.startSessionText}>{t.startSession}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -279,15 +287,13 @@ export default function DetailsScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Session terminée ! 🎉</Text>
-            <Text style={styles.modalMessage}>
-              Vous avez lu pendant <Text style={{ fontWeight: 'bold', color: COLORS.primary }}>{Math.ceil(sessionDuration / 60)} min</Text> ({formatStopwatch(sessionDuration)}).
-            </Text>
+            <Text style={[styles.modalTitle, textAlignStyle]}>{t.sessionCompletedTitle}</Text>
+            <Text style={[styles.modalMessage, textAlignStyle]}>{completedMessage}</Text>
             
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Combien de pages avez-vous lues ?</Text>
+              <Text style={[styles.formLabel, textAlignStyle]}>{t.pagesReadQuestion}</Text>
               <TextInput
-                style={styles.modalInput}
+                style={[styles.modalInput, textAlignStyle]}
                 value={pagesReadInput}
                 onChangeText={setPagesReadInput}
                 keyboardType="number-pad"
@@ -296,12 +302,12 @@ export default function DetailsScreen() {
               />
             </View>
 
-            <View style={styles.modalActions}>
+            <View style={[styles.modalActions, rowStyle]}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsSessionModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Annuler</Text>
+                <Text style={styles.cancelBtnText}>{t.cancel}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.submitBtn} onPress={handleSaveSession}>
-                <Text style={styles.submitBtnText}>Enregistrer la session</Text>
+                <Text style={styles.submitBtnText}>{t.saveSession}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -335,8 +341,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.xl,
   },
@@ -344,13 +348,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'flex-start',
   },
   menuButton: {
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'flex-end',
   },
   headerIcon: {
     color: COLORS.textPrimary,
@@ -454,7 +456,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   badgeRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginBottom: SPACING.sm,
@@ -481,7 +482,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   statusRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginTop: SPACING.sm,
@@ -533,14 +533,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   inputRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
   },
   inputWrapper: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.surface,
     borderRadius: SHAPES.buttonRadius,
@@ -585,6 +583,7 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
   },
   startSessionText: {
     color: '#FFFFFF',
@@ -594,6 +593,7 @@ const styles = StyleSheet.create({
   timerDisplayContainer: {
     alignItems: 'center',
     paddingVertical: SPACING.sm,
+    width: '100%',
   },
   timerDigits: {
     fontSize: 48,
@@ -603,7 +603,6 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   timerControlsRow: {
-    flexDirection: 'row',
     gap: 12,
   },
   timerControlBtn: {
@@ -667,8 +666,6 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
     gap: 12,
     marginTop: SPACING.lg,
   },
