@@ -7,18 +7,18 @@ import { COLORS, TYPOGRAPHY, SPACING, SHAPES, ZELLIGE_STYLES } from '../../lib/t
 
 export default function BibliothequeScreen() {
   const router = useRouter();
-  
+
   // Zustand State & Actions
   const { books, annualGoal, setSelectedBookId, addBook, profilePicture, language } = useBookStore();
-  
+
   // Localization setup
   const t = TRANSLATIONS[language] || TRANSLATIONS.fr;
   const isRtl = language === 'ar';
-  
+
   // Local UI State
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  
+
   // Add Book Form Fields
   const [newTitle, setNewTitle] = useState('');
   const [newAuthor, setNewAuthor] = useState('');
@@ -30,9 +30,9 @@ export default function BibliothequeScreen() {
   // Computed Values
   const completedBooks = books.filter(b => b.status === 'terminé');
   const completedCount = completedBooks.length;
-  
+
   const totalPagesRead = books.reduce((acc, book) => acc + (Number(book.currentPage) || 0), 0);
-  
+
   const currentMonthCount = completedBooks.filter(book => {
     if (!book.completedAt) return false;
     const date = new Date(book.completedAt);
@@ -40,7 +40,7 @@ export default function BibliothequeScreen() {
   }).length || completedCount;
 
   // Filter books list
-  const filteredBooks = books.filter(book => 
+  const filteredBooks = books.filter(book =>
     book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     book.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -68,7 +68,7 @@ export default function BibliothequeScreen() {
     setNewLanguage('AR');
     setNewRating(4.0);
     setNewStatus('à lire');
-    
+
     setIsAddModalVisible(false);
   };
 
@@ -85,7 +85,7 @@ export default function BibliothequeScreen() {
         {/* HEADER */}
         <View style={[styles.header, rowStyle]}>
           <View style={[styles.headerLeft, rowStyle]}>
-            <Text style={styles.zelligeIcon}>💠</Text>
+            <Text style={styles.zelligeIcon}>📕</Text>
             <Text style={styles.headerTitle}>{t.appTitle}</Text>
           </View>
           <View style={[styles.headerRight, rowStyle]}>
@@ -101,7 +101,7 @@ export default function BibliothequeScreen() {
             </View>
           </View>
         </View>
-        
+
         <Text style={[styles.subtitle, textAlignStyle]}>{t.greeting}</Text>
 
         {/* ANNUAL GOAL RING (hero card) */}
@@ -152,10 +152,10 @@ export default function BibliothequeScreen() {
             <Text style={styles.addButtonText}>+</Text>
           </TouchableOpacity>
         </View>
-        
+
         {/* BOOKS LIST */}
         <Text style={[styles.sectionTitle, textAlignStyle]}>{t.myLibrary}</Text>
-        
+
         {filteredBooks.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>{t.noBooks}</Text>
@@ -163,7 +163,7 @@ export default function BibliothequeScreen() {
         ) : (
           filteredBooks.map((book) => {
             const progress = book.pages > 0 ? Math.round((book.currentPage / book.pages) * 100) : 0;
-            
+
             let accentStyle = ZELLIGE_STYLES.leftAccent;
             if (book.status === 'terminé') accentStyle = ZELLIGE_STYLES.leftAccentMint;
             if (book.status === 'à lire') accentStyle = { borderLeftWidth: 4, borderLeftColor: COLORS.border };
@@ -173,9 +173,9 @@ export default function BibliothequeScreen() {
             const cardTextContainerStyle = { alignItems: isRtl ? 'flex-end' : 'flex-start' };
 
             return (
-              <TouchableOpacity 
-                key={book.id} 
-                style={[styles.bookCard, accentStyle]} 
+              <TouchableOpacity
+                key={book.id}
+                style={[styles.bookCard, accentStyle]}
                 onPress={() => handleSelectBook(book.id)}
               >
                 <View style={[styles.bookInfo, cardRowStyle]}>
@@ -191,9 +191,9 @@ export default function BibliothequeScreen() {
                 {/* Progress bar */}
                 <View style={styles.progressContainer}>
                   <View style={styles.progressBarBg}>
-                    <View style={[styles.progressBarFill, { 
+                    <View style={[styles.progressBarFill, {
                       width: `${progress}%`,
-                      backgroundColor: book.status === 'terminé' ? COLORS.tertiary : COLORS.primary 
+                      backgroundColor: book.status === 'terminé' ? COLORS.tertiary : COLORS.primary
                     }]} />
                   </View>
                   <Text style={[styles.progressText, { textAlign: isRtl ? 'left' : 'right' }]}>
@@ -216,7 +216,7 @@ export default function BibliothequeScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={[styles.modalTitle, textAlignStyle]}>{t.addBookBtn}</Text>
-            
+
             <TextInput
               style={[styles.modalInput, textAlignStyle]}
               placeholder={t.title}
@@ -246,8 +246,8 @@ export default function BibliothequeScreen() {
               <Text style={[styles.formLabel, textAlignStyle]}>{t.language}:</Text>
               <View style={[styles.optionRow, rowStyle]}>
                 {['AR', 'FR', 'EN'].map((lang) => (
-                  <TouchableOpacity 
-                    key={lang} 
+                  <TouchableOpacity
+                    key={lang}
                     style={[styles.optionButton, newLanguage === lang && styles.optionButtonActive]}
                     onPress={() => setNewLanguage(lang)}
                   >
@@ -261,8 +261,8 @@ export default function BibliothequeScreen() {
               <Text style={[styles.formLabel, textAlignStyle]}>{t.status}:</Text>
               <View style={[styles.optionRow, rowStyle]}>
                 {['à lire', 'en cours', 'terminé'].map((status) => (
-                  <TouchableOpacity 
-                    key={status} 
+                  <TouchableOpacity
+                    key={status}
                     style={[styles.optionButton, newStatus === status && styles.optionButtonActive]}
                     onPress={() => setNewStatus(status)}
                   >
