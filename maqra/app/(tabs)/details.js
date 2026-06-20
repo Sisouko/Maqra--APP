@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Modal, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { useBookStore } from '../../store/useBookStore';
+import ImagePickerModal from '../../components/ImagePickerModal';
 import { useReadingTimer } from '../../hooks/useReadingTimer';
 import { TRANSLATIONS } from '../../lib/localization';
 import { COLORS, TYPOGRAPHY, SPACING, SHAPES, ZELLIGE_STYLES } from '../../lib/theme';
@@ -25,6 +25,9 @@ export default function DetailsScreen() {
   const [isSessionModalVisible, setIsSessionModalVisible] = useState(false);
   const [sessionDuration, setSessionDuration] = useState(0);
   const [pagesReadInput, setPagesReadInput] = useState('10');
+  
+  // Image picker modal state
+  const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
 
   // Sync state input when book selection changes
   useEffect(() => {
@@ -58,36 +61,8 @@ export default function DetailsScreen() {
   };
 
   // Change Book Cover Photo
-  const handleChangeCover = async () => {
-    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-    const libraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (cameraPermission.status !== 'granted' && libraryPermission.status !== 'granted') {
-      alert("Nous avons besoin des permissions d'accès aux photos et à la caméra pour changer la couverture !");
-      return;
-    }
-
-    try {
-      let result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0].uri) {
-        updateBookCover(book.id, result.assets[0].uri);
-      }
-    } catch (e) {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0].uri) {
-        updateBookCover(book.id, result.assets[0].uri);
-      }
-    }
+  const handleChangeCover = () => {
+    setIsImagePickerVisible(true);
   };
 
   // Stopwatch Session Actions
@@ -313,6 +288,14 @@ export default function DetailsScreen() {
           </View>
         </View>
       </Modal>
+
+      <ImagePickerModal
+        isVisible={isImagePickerVisible}
+        onClose={() => setIsImagePickerVisible(false)}
+        onSelectImage={(uri) => updateBookCover(book.id, uri)}
+        aspect={[3, 4]}
+        language={language}
+      />
     </View>
   );
 }

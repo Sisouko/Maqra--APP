@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Animated, Easing } from 'react-native';
 import { useBookStore } from '../../store/useBookStore';
 import { TRANSLATIONS } from '../../lib/localization';
 import { COLORS, TYPOGRAPHY, SPACING, SHAPES, ZELLIGE_STYLES } from '../../lib/theme';
+import ImagePickerModal from '../../components/ImagePickerModal';
 
 export default function StatsScreen() {
   const { 
@@ -17,6 +18,8 @@ export default function StatsScreen() {
     language,
     setLanguage
   } = useBookStore();
+
+  const [isImagePickerVisible, setIsImagePickerVisible] = useState(false);
 
   // Localization setup
   const t = TRANSLATIONS[language] || TRANSLATIONS.fr;
@@ -76,37 +79,8 @@ export default function StatsScreen() {
   };
 
   // Profile Picture Selector
-  const ImagePicker = require('expo-image-picker');
-  const handleSelectProfilePicture = async () => {
-    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-    const libraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (cameraPermission.status !== 'granted' && libraryPermission.status !== 'granted') {
-      alert("Nous avons besoin des permissions d'accès aux photos et à la caméra pour changer votre photo de profil !");
-      return;
-    }
-
-    try {
-      let result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0].uri) {
-        setProfilePicture(result.assets[0].uri);
-      }
-    } catch (error) {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0].uri) {
-        setProfilePicture(result.assets[0].uri);
-      }
-    }
+  const handleSelectProfilePicture = () => {
+    setIsImagePickerVisible(true);
   };
 
   // RTL Overrides
@@ -258,6 +232,13 @@ export default function StatsScreen() {
           })}
         </View>
       </View>
+      <ImagePickerModal
+        isVisible={isImagePickerVisible}
+        onClose={() => setIsImagePickerVisible(false)}
+        onSelectImage={(uri) => setProfilePicture(uri)}
+        aspect={[1, 1]}
+        language={language}
+      />
     </ScrollView>
   );
 }

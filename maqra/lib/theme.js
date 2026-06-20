@@ -2,19 +2,19 @@
 // Inspired by Moroccan visual identity (Majorelle Blue, Terracotta, Mint, Zellige patterns)
 
 export const COLORS = {
-  background: '#0F0E1A', // Deep navy-black background
-  surface: '#1A1826',    // Surface container background
-  card: '#221F33',       // Card background
+  background: '#000000', // Deep black background
+  surface: '#121212',    // Dark surface container background
+  card: '#1A1A1A',       // Dark Charcoal card background
   
-  primary: '#1B4FE4',    // Majorelle Blue (active states, progress, CTA buttons)
-  secondary: '#C1440E',  // Terracotta (warnings, goals, streaks, warning badges)
-  tertiary: '#1D9E75',   // Mint green (success, finished, positive highlights)
+  primary: '#FF0055',    // Hot Pink/Magenta (Primary CTA / active states)
+  secondary: '#FF00AE',  // Vibrant Neon Pink (Secondary / Highlight)
+  tertiary: '#D500F9',   // Neon Purple/Magenta (Special status / completed states)
   
   textPrimary: '#FFFFFF',
-  textSecondary: '#A09EC0', // Muted text
+  textSecondary: '#A0A0A0', // Light Gray text
   
-  border: '#2E2B45',     // Subtle zellige-color border
-  borderLight: '#3E3B59',
+  border: '#2A2A2A',     // Subtle dark border
+  borderLight: '#3A3A3A',
   
   shadowColor: '#000000',
 };
@@ -80,8 +80,8 @@ export const SPACING = {
 };
 
 export const SHAPES = {
-  cardRadius: 12,
-  buttonRadius: 8,
+  cardRadius: 16,
+  buttonRadius: 999, // Fully rounded capsule buttons
   pillRadius: 999,
 };
 

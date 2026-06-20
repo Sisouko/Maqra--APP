@@ -54,6 +54,9 @@ export const TRANSLATIONS = {
     changeLanguageTitle: "Langue de l'application",
     resetMocksBtn: "Réinitialiser les données",
     location: "Lecteur depuis Casablanca 📍",
+    chooseSourceTitle: "Choisir une photo",
+    cameraOption: "Prendre une photo 📸",
+    galleryOption: "Choisir depuis la galerie 🖼️",
   },
   ar: {
     appTitle: "مقرا · Maqra",
@@ -107,6 +110,9 @@ export const TRANSLATIONS = {
     changeLanguageTitle: "لغة التطبيق",
     resetMocksBtn: "إعادة تعيين البيانات",
     location: "قارئ من الدار البيضاء 📍",
+    chooseSourceTitle: "اختر مصدراً",
+    cameraOption: "التقاط صورة 📸",
+    galleryOption: "اختيار من المعرض 🖼️",
   },
   tz: {
     appTitle: "مقرا · Maqra",
@@ -160,5 +166,8 @@ export const TRANSLATIONS = {
     changeLanguageTitle: "ⵜⵓⵜⵍⴰⵢⵜ ⵏ ⵓⵙⵏⵙⵓ",
     resetMocksBtn: "ⵙⴷⵖⵉ ⵎⴰⵕⵕⴰ",
     location: "ⴰⵎⵖⵔⵉ ⵙⴳ ⴰⵏⴼⴰ 📍",
+    chooseSourceTitle: "ⵙⵜⵉ ⴰⵙⴰⴳⵓⵎ",
+    cameraOption: "ⵟⵟⴼ ⵜⴰⵡⵍⴰⴼⵜ 📸",
+    galleryOption: "ⵙⵜⵉ ⵙⴳ ⵜⵙⴷⵍⵉⵙⵜ 🖼️",
   }
 };
